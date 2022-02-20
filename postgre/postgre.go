@@ -2,14 +2,10 @@ package postgre
 
 import (
 	"fmt"
-	"github.com/go-sql-driver/mysql"
-	"log"
 	"time"
 
 	"database/sql"
 	"net/url"
-
-	"github.com/budhip/common/tls"
 )
 
 const (
@@ -31,7 +27,6 @@ type Config struct {
 	MaxIdle     int
 	MaxLifetime int // in minutes
 	MaxIdleTime int // in minutes
-	CA          []byte
 	ServerName  string
 	ParseTime   bool
 	Location    string
@@ -47,9 +42,6 @@ func dataSourceName(config Config) string {
 	if len(config.Location) > 0 {
 		val.Add("loc", config.Location)
 	}
-	if config.CA != nil {
-		val.Add("tls", "custom")
-	}
 
 	if len(val) == 0 {
 		return connection
@@ -59,18 +51,6 @@ func dataSourceName(config Config) string {
 
 // DB return new sql db
 func DB(config Config) (*sql.DB, error) {
-	if config.CA != nil && len(config.ServerName) != 0 {
-		if err := mysql.RegisterTLSConfig("custom", tls.WithServerAndCA(config.ServerName, config.CA)); err != nil {
-			log.Println(err)
-			return nil, err
-		}
-	} else if config.CA != nil {
-		if err := mysql.RegisterTLSConfig("custom", tls.WithCA(config.CA)); err != nil {
-			log.Println(err)
-			return nil, err
-		}
-	}
-
 	db, err := sql.Open("postgres", dataSourceName(config))
 	if err != nil {
 		return nil, err
