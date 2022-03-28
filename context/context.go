@@ -21,6 +21,8 @@ var (
 	CtxEmail = contextKey("email")
 	// CtxUserInfo is context key for user info
 	CtxUserInfo = contextKey("user_info")
+	// CtxCID is context key for user info
+	CtxCID = contextKey("cID")
 )
 
 // GetContextAsString return context value as type string
