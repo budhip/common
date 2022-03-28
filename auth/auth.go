@@ -2,9 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
@@ -16,6 +13,7 @@ const (
 	bearer        string = "bearer"
 	authorization string = "authorization"
 	jwtpayload    string = "jwtpayload"
+	cID			  string = "cID"
 )
 
 type UserInfo struct {
@@ -44,18 +42,18 @@ func extractPayloadFromToken(token string) (string, bool) {
 }
 
 func withUserInfo(ctx context.Context, payload string) context.Context {
-	var userInfo UserInfo
-	if claims, err := base64.RawURLEncoding.DecodeString(payload); err != nil {
-		log.Printf("error while decoding jwt payload: %v", err)
+	//var userInfo UserInfo
+	//if claims, err := base64.RawURLEncoding.DecodeString(payload); err != nil {
+	//	log.Printf("error while decoding jwt payload: %v", err)
+	//
+	//	return ctx
+	//} else if err := json.Unmarshal(claims, &userInfo); err != nil {
+	//	log.Printf("error while unmarshalling jwt payload: %v", err)
+	//
+	//	return ctx
+	//}
 
-		return ctx
-	} else if err := json.Unmarshal(claims, &userInfo); err != nil {
-		log.Printf("error while unmarshalling jwt payload: %v", err)
-
-		return ctx
-	}
-
-	return context.WithValue(ctx, cctx.CtxUserInfo, userInfo)
+	return context.WithValue(ctx, cctx.CtxCID, payload)
 }
 
 func WithUserInfoContext(ctx context.Context) context.Context {
@@ -64,23 +62,31 @@ func WithUserInfoContext(ctx context.Context) context.Context {
 		return ctx
 	}
 
+	//var payload string
+	//payloadHeader, ok := md[jwtpayload]
+	//if ok {
+	//	payload = payloadHeader[0]
+	//} else {
+	//	authHeader, ok := md[authorization]
+	//	if !ok {
+	//		return ctx
+	//	}
+	//
+	//	token, ok := extractTokenFromAuthHeader(authHeader[0])
+	//	if ok {
+	//		payload, ok = extractPayloadFromToken(token)
+	//		if !ok {
+	//			return ctx
+	//		}
+	//	}
+	//}
+
 	var payload string
-	payloadHeader, ok := md[jwtpayload]
+	payloadHeader, ok := md[cID]
 	if ok {
 		payload = payloadHeader[0]
 	} else {
-		authHeader, ok := md[authorization]
-		if !ok {
-			return ctx
-		}
-
-		token, ok := extractTokenFromAuthHeader(authHeader[0])
-		if ok {
-			payload, ok = extractPayloadFromToken(token)
-			if !ok {
-				return ctx
-			}
-		}
+		return ctx
 	}
 
 	return withUserInfo(ctx, payload)
